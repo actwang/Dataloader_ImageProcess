@@ -37,7 +37,7 @@ class DataLoader(object):
         labels = torch.zeros(self.batch_size, 3)
         # compose a series of random tranforms to do some runtime data augmentation
         to_tensor = transforms.Compose([
-            transforms.RandomResizedCrop(size=(HEIGHT,WIDTH)),
+            transforms.RandomResizedCrop(size=(HEIGHT, WIDTH)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(p=0.3),
             transforms.ToTensor(),
@@ -68,7 +68,7 @@ class DataLoader(object):
                 resized_img = image
 
             # augumentation
-            img_tensor = to_tensor(resized_img)
+            imgs = to_tensor(resized_img)
 
             labels[idx][rand_int] = 1
 
@@ -91,6 +91,10 @@ def imshow(inp, title=None):
 def showABatch(batch, title=None):
     imgs, labels = batch
     # ADD YOUR CODE HERE
+    for i in range(length(batch)):
+        cv2.imshow(labels[i], imgs[i])
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
 # visualize your results
