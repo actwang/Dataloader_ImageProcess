@@ -39,7 +39,7 @@ class DataLoader(object):
         to_tensor = transforms.Compose([
             transforms.RandomResizedCrop(size=(HEIGHT,WIDTH)),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticallFlip(p=0.3),
+            transforms.RandomVerticalFlip(p=0.3),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
@@ -57,28 +57,22 @@ class DataLoader(object):
             image = cv2.imread(full_img_path, 0)
 
             # randomly resize an image to 600, 500 or 400 dpi and resize it back to 600dpi
-            temp_dict = {0:600,1:500,2:400}
+            temp_dict = {0: 600, 1: 500, 2: 400}
             rand_int = np.random.randint(3)
             if rand_int != 0:
-                resized_img = cv2.resize(image, None, fx=temp_dict[rand_int]/600, fy=temp_dict[rand_int]/600, interpolation=cv2.INTER_AREA)
-                resized_img = cv2.resize(resized_img, None, fx=600/temp_dict[rand_int], fy=600/temp_dict[rand_int],interpolation=cv2.INTER_LINEAR)
+                resized_img = cv2.resize(image, None, fx=temp_dict[rand_int]/600, fy=temp_dict[rand_int]/600,
+                                         interpolation=cv2.INTER_AREA)
+                resized_img = cv2.resize(resized_img, None, fx=600/temp_dict[rand_int], fy=600/temp_dict[rand_int],
+                                         interpolation=cv2.INTER_LINEAR)
             else:
                 resized_img = image
-            # get current shape
-            ori_height, ori_width = resized_img.shape
 
-            # randomly crop the resulting image to 256x256
-            r = np.random.randint(ori_height - HEIGHT)
-            c = np.random.randint(ori_width - WIDTH)
-            resized_img = resized_img[r:r+HEIGHT, c:c+WIDTH]
-
-            # randomly flip the image horizontally or vertically
-            
-
+            # augumentation
             img_tensor = to_tensor(resized_img)
 
+            labels[idx][rand_int] = 1
 
-        return (imgs, labels)
+        return imgs, labels
 
 
 def imshow(inp, title=None):
