@@ -44,6 +44,7 @@ for name, img in resize_imgs.items():
 
     # visualize the difference image and save it if it makes sense
     cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+    diff = cv2.resize(diff, (1000, 1000))
     cv2.imshow(name, diff)
     key = cv2.waitKey(0)
     if key == ord('s'):
