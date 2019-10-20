@@ -5,6 +5,7 @@ import os
 HW1 = 256
 HW2 = 128
 
+# directories
 # original image directories
 train_dir = '/home/zi29/Desktop/IMP/wk4/dataset/raw/orig_imgs/train'
 test_dir = '/home/zi29/Desktop/IMP/wk4/dataset/raw/orig_imgs/test'
@@ -39,11 +40,11 @@ def train_gen_patch(image, label, pic_name):
             x += 128
             # check if the cropped image contains text by using threshold
             # if it does, inherit label
-            if ???????? :   # do we have to use otsu's method?
-                cv2.imwrite('/'.join((train_sdir, label, pic_name)) + str(idx) + '.tif', crop_img)
+            if text:   # do we have to use otsu's method?
+                cv2.imwrite('/'.join((train_sdir, label, pic_name)) + '('+str(idx)+')' + '.tif', crop_img)
 
             else:
-                cv2.imwrite('/'.join((train_sdir, 'dpi75', pic_name)) + str(idx) + '.tif', crop_img)
+                cv2.imwrite('/'.join((train_sdir, 'dpi75', pic_name)) + '('+str(idx)+')' + '.tif', crop_img)
             idx += 1
         y += 128
 
@@ -69,10 +70,28 @@ def valtest_gen_patch(image, label, pic_name, flag):
             # check if the cropped image contains text by using threshold
             # if it does, inherit label
             if text:
-                cv2.imwrite('/'.join((dir_dict[flag], label, pic_name)) + str(idx) + '.tif', crop_img)
+                cv2.imwrite('/'.join((dir_dict[flag], label, pic_name)) + '('+str(idx)+')' + '.tif', crop_img)
 
             else:
-                cv2.imwrite('/'.join((dir_dict[flag], 'dpi75', pic_name)) + str(idx) + '.tif', crop_img)
+                cv2.imwrite('/'.join((dir_dict[flag], 'dpi75', pic_name)) + '('+str(idx)+')' + '.tif', crop_img)
             idx += 1
         y += 128
 
+
+# MAIN
+
+state_dict = {'train': train_dir, 'test': test_dir, 'val': val_dir}
+for state, state_dir in state_dict:
+    # walk under train_dir into folders of different dpi's
+    for root, labels, files in os.walk(state_dir):
+        # dpi_fdr is a list of strings
+        for dpi_fdr in labels:
+            img_namelst = [k.split('/')[-1].split('.')[0] for k in glob.glob(os.path.join(state_dir, dpi_fdr, '*.tif'))]
+            for name in img_namelst:
+                # for rt, dirs, imgs in os.walk('/'.join((train_dir, dpi_fdr))):
+                #     for img_name in imgs:
+                pic = cv2.imread(os.path.join(state_dir, dpi_fdr, name+'.tif'), 0)
+                if state_dir == train_dir:
+                    train_gen_patch(pic, dpi_fdr, name)
+                else:
+                    valtest_gen_patch(pic, dpi_fdr, name, state)
