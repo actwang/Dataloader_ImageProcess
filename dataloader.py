@@ -5,10 +5,12 @@ import cv2
 import torch
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
+from PIL import Image
 
 # Image size required by your neural network
 HEIGHT = 256
 WIDTH = 256
+
 
 class DataLoader(object):
 
@@ -37,16 +39,17 @@ class DataLoader(object):
         labels = torch.zeros(self.batch_size, 3)
         # compose a series of random tranforms to do some runtime data augmentation
         to_tensor = transforms.Compose([
-            transforms.RandomResizedCrop(size=(HEIGHT, WIDTH)),
+            transforms.RandomCrop(size=(HEIGHT, WIDTH)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(p=0.3),
             transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
         for idx in range(self.batch_size):
             # get the current file name pointed by the cursor
             curr_file = self.list_img[self.cursor]
+            print('cursor' + str(self.cursor))
             # get the full path to that image
             full_img_path = os.path.join(self.path, curr_file + '.tif')
             # update cursor
@@ -68,7 +71,7 @@ class DataLoader(object):
                 resized_img = image
 
             # augumentation
-            imgs = to_tensor(resized_img)
+            imgs[idx,0,:,:] = to_tensor(Image.fromarray(resized_img))
 
             labels[idx][rand_int] = 1
 
@@ -77,12 +80,13 @@ class DataLoader(object):
 
 def imshow(inp, title=None):
     # imshow for a tensor.
-    inp = inp.numpy().transpose((1, 2, 0))
-    mean = np.array([0.485, 0.456, 0.406])
-    std = np.array([0.229, 0.224, 0.225])
-    inp = std * inp + mean
+    # inp = inp.numpy().transpose((1, 2, 0))
+    # mean = np.array([0.485, 0.456, 0.406])
+    # std = np.array([0.229, 0.224, 0.225])
+    # inp = std * inp + mean
+    inp = inp.numpy()
     inp = np.clip(inp, 0, 1)
-    plt.imshow(inp)
+    plt.imshow(inp,cmap='gray')
     if title is not None:
         plt.title(title)
     plt.show()
@@ -90,15 +94,16 @@ def imshow(inp, title=None):
 
 def showABatch(batch, title=None):
     imgs, labels = batch
+    label_dict = {0:'600 dpi', 1:'500 dpi', 2:'400 dpi'}
     # ADD YOUR CODE HERE
-    for i in range(length(batch)):
-        cv2.imshow(labels[i], imgs[i])
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+    for i in range(len(batch)):
+        plt.figure()
+        imshow(imgs[i].squeeze(),'label: '+label_dict[torch.max(labels[i]).item()])
+    plt.show()
 
 
 # visualize your results
-training_img_path = '/home/zi29/Desktop/IMP/Week 3/assignment3/600dpi'
+training_img_path = '/home/zi29/Desktop/IMP/wk3/assignment3/600dpi'
 
 trainLoader = DataLoader(training_img_path, batch_size = 4)
 print(trainLoader.batch_size)
