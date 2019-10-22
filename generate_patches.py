@@ -86,6 +86,9 @@ def isblank(img):
     :return: blank(bool)
     """
     retval, th1 = cv2.threshold(img, 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # 0 -> black 1 -> white
+    # but thresholding value retval still range from 0 to 255, if it falls below 220,
+    # most likely it contains some type of text
     if retval < 220.0:
         blank = False
     else:
