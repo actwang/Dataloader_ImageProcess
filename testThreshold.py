@@ -12,8 +12,9 @@ cv2.waitKey(0)
 
 thresh, th1 = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 print(th1, 'thresholded')
-sum = 0
 print(thresh)
+
+sum = 0
 ct = 0
 tot1 = 0
 for lst in th1:
