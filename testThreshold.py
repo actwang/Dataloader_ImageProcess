@@ -3,16 +3,18 @@ import cv2
 
 imgpath = '/home/zi29/Desktop/IMP/wk4/dataset/raw/orig_imgs/train/dpi75/ENG1_1.tif'
 uncrop = cv2.imread(imgpath, 0)
+# for quick adjust crop area to test different patches of an image
 x = 300
 img = uncrop[x:x+256,x:x+256]
 cv2.imshow('img',img)
 cv2.waitKey(0)
-#print(img,'img')
+# print(img,'img')
+
 thresh, th1 = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-print(th1,'thresholded')
+print(th1, 'thresholded')
 sum = 0
 print(thresh)
-ct =0
+ct = 0
 tot1 = 0
 for lst in th1:
     for pix in lst:
@@ -21,6 +23,7 @@ for lst in th1:
         if pix != 0:
             tot1 += 1
 avg = sum/ct
+
 print(round(avg,2),'avg')
 print(ct, 'ct')
 print(tot1,'tot1')
