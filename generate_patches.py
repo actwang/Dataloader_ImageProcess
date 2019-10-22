@@ -86,7 +86,10 @@ def isblank(img):
     :return: blank(bool)
     """
     retval, th1 = cv2.threshold(img, 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
+    if retval < 220.0:
+        blank = False
+    else:
+        blank = True
     return blank
 
 
