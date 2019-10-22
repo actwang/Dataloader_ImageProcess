@@ -40,7 +40,7 @@ def train_gen_patch(image, label, pic_name):
             x += 128
             # check if the cropped image contains text by using threshold
             # if it does, inherit label
-            if text:   # do we have to use otsu's method?
+            if not isblank(crop_img):
                 cv2.imwrite('/'.join((train_sdir, label, pic_name)) + '('+str(idx)+')' + '.tif', crop_img)
 
             else:
@@ -56,7 +56,7 @@ def valtest_gen_patch(image, label, pic_name, flag):
 
     image, str(e.g. 'dpi75'),str(e.g. 'ENG1_1'), str  -> None"""
 
-    dir_dict = {'test':test_sdir, 'val':val_sdir}
+    dir_dict = {'test': test_sdir, 'val': val_sdir}
 
     h_steps = int(height / 128) - 1
     w_steps = int(width / 128) - 1
@@ -69,7 +69,7 @@ def valtest_gen_patch(image, label, pic_name, flag):
             x += 128
             # check if the cropped image contains text by using threshold
             # if it does, inherit label
-            if text:
+            if not isblank(crop_img):
                 cv2.imwrite('/'.join((dir_dict[flag], label, pic_name)) + '('+str(idx)+')' + '.tif', crop_img)
 
             else:
@@ -78,19 +78,30 @@ def valtest_gen_patch(image, label, pic_name, flag):
         y += 128
 
 
-# MAIN
+def isblank(img):
+    """
+    takes an image and return whether or not the image is just blank without text
 
+    :param img:
+    :return: blank(bool)
+    """
+    retval, th1 = cv2.threshold(img, 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    return blank
+
+
+# MAIN
 state_dict = {'train': train_dir, 'test': test_dir, 'val': val_dir}
 for state, state_dir in state_dict:
     # walk under train_dir into folders of different dpi's
     for root, labels, files in os.walk(state_dir):
-        # dpi_fdr is a list of strings
+        # labels is a list of strings
         for dpi_fdr in labels:
             img_namelst = [k.split('/')[-1].split('.')[0] for k in glob.glob(os.path.join(state_dir, dpi_fdr, '*.tif'))]
             for name in img_namelst:
                 # for rt, dirs, imgs in os.walk('/'.join((train_dir, dpi_fdr))):
                 #     for img_name in imgs:
-                pic = cv2.imread(os.path.join(state_dir, dpi_fdr, name+'.tif'), 0)
+                pic = cv2.imread(os.path.join(state_dir, dpi_fdr, name+'.tif'), 0)  # read in grayscale for thresholding
                 if state_dir == train_dir:
                     train_gen_patch(pic, dpi_fdr, name)
                 else:
