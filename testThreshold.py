@@ -16,7 +16,7 @@ print(thresh)
 
 sum = 0
 ct = 0
-tot1 = 0
+tot1 = 0    # total number of 1's
 for lst in th1:
     for pix in lst:
         sum += pix
@@ -25,6 +25,8 @@ for lst in th1:
             tot1 += 1
 avg = sum/ct
 
+# we can tell from here, it's better to just stick with judging text/blank with
+# threshold retval(thresh in this case) and not use average or count total number of 1's
 print(round(avg,2),'avg')
 print(ct, 'ct')
 print(tot1,'tot1')
