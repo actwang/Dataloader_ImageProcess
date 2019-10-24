@@ -6,6 +6,7 @@ import torch
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 from PIL import Image
+from pathlib import Path
 
 # Image size required by your neural network
 HEIGHT = 256
@@ -14,7 +15,7 @@ WIDTH = 256
 
 class DataLoader(object):
 
-    def __init__(self, pathToImage, batch_size = 4):
+    def __init__(self, pathToImage, label, batch_size = 4):
         # reading data list
         self.list_img = [k.split('/')[-1].split('.')[0] for k in glob.glob(os.path.join(pathToImage,'*.tif'))]
         # store the batch size
@@ -27,8 +28,10 @@ class DataLoader(object):
         self.num_batches = self.size // batch_size
         # store image path
         self.path = pathToImage
+        # label as parent directory
+        self.label = label
 
-    def get_batch(self):
+    def get_batch(self, state, ):
         # once we reach the end of the dataset, shuffle it again and reset cursor
         if self.cursor + self.batch_size > self.size:
             self.cursor = 0
@@ -36,14 +39,14 @@ class DataLoader(object):
         # initialize the image tensor with arrays full of zeros
         imgs = torch.zeros(self.batch_size, 1, HEIGHT, WIDTH)
         # initialize the label tensor with zeros, 3 here is the size of one-hot encoded label for a 3-class classification problem
-        labels = torch.zeros(self.batch_size, 3)
-        # compose a series of random tranforms to do some runtime data augmentation
+        labels = torch.zeros(self.batch_size, 4)
+        # compose a series of random transforms to do some runtime data augmentation
         to_tensor = transforms.Compose([
             transforms.RandomCrop(size=(HEIGHT, WIDTH)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(p=0.3),
             transforms.ToTensor(),
-            # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
         for idx in range(self.batch_size):
@@ -54,26 +57,37 @@ class DataLoader(object):
             full_img_path = os.path.join(self.path, curr_file + '.tif')
             # update cursor
             self.cursor += 1
-            
-            # ADD YOUR CODE HERE
+
+            temp_dict = {0: 'dpi600', 1: 'dpi300', 2: 'dpi150', 3: 'dpi75'}
+
             # read image in grayscale
             image = cv2.imread(full_img_path, 0)
-
-            # randomly resize an image to 600, 500 or 400 dpi and resize it back to 600dpi
-            temp_dict = {0: 600, 1: 500, 2: 400}
-            rand_int = np.random.randint(3)
-            if rand_int != 0:
-                resized_img = cv2.resize(image, None, fx=temp_dict[rand_int]/600, fy=temp_dict[rand_int]/600,
-                                         interpolation=cv2.INTER_AREA)
-                resized_img = cv2.resize(resized_img, None, fx=600/temp_dict[rand_int], fy=600/temp_dict[rand_int],
-                                         interpolation=cv2.INTER_LINEAR)
+            h, w = image.shape
+            if state == 'train':
+                # center crop to 128x128
+                imgs = image[h/2-64:h/2+64, w/2-64:w/2+64]
             else:
-                resized_img = image
+                imgs = image
+
+
+            # # randomly resize an image to 600, 500 or 400 dpi and resize it back to 600dpi
+            # temp_dict = {0: 600, 1: 500, 2: 400}
+            # rand_int = np.random.randint(3)
+            # if rand_int != 0:
+            #     resized_img = cv2.resize(image, None, fx=temp_dict[rand_int]/600, fy=temp_dict[rand_int]/600,
+            #                              interpolation=cv2.INTER_AREA)
+            #     resized_img = cv2.resize(resized_img, None, fx=600/temp_dict[rand_int], fy=600/temp_dict[rand_int],
+            #                              interpolation=cv2.INTER_LINEAR)
+            # else:
+            #     resized_img = image
 
             # augumentation
-            imgs[idx,0,:,:] = to_tensor(Image.fromarray(resized_img))
+            # imgs[idx,0,:,:] = to_tensor(Image.fromarray(resized_img))
+            #
 
-            labels[idx][rand_int] = 1
+            # label index
+            lab_ind = list(temp_dict.values().index(self.label))
+            labels[idx][lab_ind] = 1
 
         return imgs, labels
 
@@ -94,7 +108,7 @@ def imshow(inp, title=None):
 
 def showABatch(batch, title=None):
     imgs, labels = batch
-    label_dict = {0:'600 dpi', 1:'500 dpi', 2:'400 dpi'}
+    label_dict = {0: '600 dpi', 1: '300 dpi', 2: '150 dpi', 3: '75 dpi'}
     # ADD YOUR CODE HERE
     for i in range(len(batch)):
         plt.figure()
@@ -103,12 +117,20 @@ def showABatch(batch, title=None):
 
 
 # visualize your results
-training_img_path = '/home/zi29/Desktop/IMP/wk3/assignment3/600dpi'
+# save to directories
+patch_dir = '/home/zi29/Desktop/IMP/wk4/dataset/raw/patches'
+patch_set = ['train','test','val']
+patch_lab = ['dpi75','dpi150','dpi300','dpi600']
 
-trainLoader = DataLoader(training_img_path, batch_size = 4)
-print(trainLoader.batch_size)
-print(trainLoader.num_batches)
+for folder in patch_set:
+    for label in patch_lab:
+        img_path = '/'.join((patch_dir,folder,label))
+        loader = DataLoader(img_path,label, batch_size=4)
+        print(loader.batch_size)
+        print(loader.num_batches)
 
-N_batch = 3
-for i in range(N_batch):
-    showABatch(trainLoader.get_batch())
+# N_batch = 3
+# for i in range(N_batch):
+#     showABatch(trainLoader.get_batch('train'))
+#     showABatch(testLoader.get_batch('test'))
+#     showABatch(valLoader.get_batch('val'))
