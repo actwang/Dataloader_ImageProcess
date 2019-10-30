@@ -53,7 +53,7 @@ class DataLoader(object):
             curr_file = self.list_img[self.cursor]
             print('cursor' + str(self.cursor))
             # get the full path to that image
-            full_img_path = os.path.join(self.path, curr_file + '.tif')
+            full_img_path = os.path.join(self.path, state, self.label, curr_file + '.tif')
             # update cursor
             self.cursor += 1
 
@@ -140,28 +140,13 @@ data_transforms = {
             ]),
         'test': transforms.Compose([
             transforms.ToTensor()
-            ])
+        ])
 }
 # join data_dir and x = 'train' and 'val' for directory as input along with the transform methods.
 # pass them to ImageFolder and so it's a dictionary with keys 'train' and 'val'
 
-for y in patch_lab:
-    # Qu: ImageFolder just dataloader? just used DataLoader for the whole thing
 
-    # image_datasets = {x: datasets.ImageFolder(os.path.join(patch_dir, x, y), data_transforms[x])
-    #                   for x in ['train', 'val', 'test']}
-    dataloaders = {x: DataLoader(os.path.join(patch_dir, x, y), y, batch_size=4)
-               for x in ['train', 'val', 'test']}
-
-    # don't need class names
-    dataset_sizes = {x: len(dataloaders[x]) for x in ['train', 'val', 'test']}
-    # class_names = image_datasets['train'].classes
-
-print(str(torch.cuda.is_available()))
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
+# EDIT GET_BATCH()
 def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     since = time.time()
 
@@ -173,7 +158,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        for phase in ['train', 'val','test']:
+        for phase in ['train', 'val', 'test']:
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
@@ -183,7 +168,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             running_corrects = 0
 
             # Iterate over data.
-            for inputs, labels in dataloaders[phase]:
+            for inputs, labels in DataLoader.get_batch(phase):
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
@@ -231,14 +216,27 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     return model
 
 
-# resnet model (followed tutorial)
-# Qu: where get_batch()? Without get_batch() it's not cropped.
+# image_datasets = {x: datasets.ImageFolder(os.path.join(patch_dir, x), data_transforms[x])
+#                for x in ['train', 'val']}
+
+
+dataloaders = {x: DataLoader(patch_dir, x, batch_size=4)
+               for x in ['train', 'val']}
+
+# don't need class names
+dataset_sizes = {x: len(dataloaders[x]) for x in ['train', 'val']}
+# class_names = image_datasets['train'].classes
+
+print(str(torch.cuda.is_available()))
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+# LeNet take input 128x128
 model_or = models.resnet18(pretrained=False)
 num_ftrs = model_or.fc.in_features
 model_or.fc = nn.Linear(num_ftrs, 4)
 model_or = model_or.to(device)
 criterion = nn.CrossEntropyLoss()
-# Qu: should lr start from 0.1? says divided by 10 when validation error plateaus
 optimizer_or = optim.SGD(model_or.parameters(), lr=0.001, momentum=0.9)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_or, step_size=7, gamma=0.1)
 
