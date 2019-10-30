@@ -1,5 +1,6 @@
 import cv2
 import os
+import glob
 
 # height and width of training and val/test
 HW1 = 256
@@ -98,7 +99,7 @@ def isblank(img):
 
 # MAIN
 state_dict = {'train': train_dir, 'test': test_dir, 'val': val_dir}
-for state, state_dir in state_dict:
+for state, state_dir in state_dict.items():
     # walk under train_dir into folders of different dpi's
     for root, labels, files in os.walk(state_dir):
         # labels is a list of strings
