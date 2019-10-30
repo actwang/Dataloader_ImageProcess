@@ -232,12 +232,13 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
 
 # resnet model (followed tutorial)
-# Qu: where get_batch()?
+# Qu: where get_batch()? Without get_batch() it's not cropped.
 model_or = models.resnet18(pretrained=False)
 num_ftrs = model_or.fc.in_features
 model_or.fc = nn.Linear(num_ftrs, 4)
 model_or = model_or.to(device)
 criterion = nn.CrossEntropyLoss()
+# Qu: should lr start from 0.1? says divided by 10 when validation error plateaus
 optimizer_or = optim.SGD(model_or.parameters(), lr=0.001, momentum=0.9)
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_or, step_size=7, gamma=0.1)
 
