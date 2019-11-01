@@ -26,6 +26,7 @@ class LeNet5(nn.Module):
             ('c3', nn.Conv2d(6, 16, kernel_size=(5, 5))),
             ('relu3', nn.ReLU()),
             ('s4', nn.MaxPool2d(kernel_size=(2, 2), stride=2)),
+            # flatten() here from 16@5x5 to 400x1 to (in linear) 120 to 4
             ('c5', nn.Conv2d(16, 120, kernel_size=(5, 5))),
             ('relu5', nn.ReLU())
         ]))

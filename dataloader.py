@@ -53,13 +53,13 @@ class DataLoader(object):
     def __init__(self, path_to_labels, batch_size=4):
         # reading data list
         # now it's a list of all images in that dataset(train or val)
-        self.list_img = []
+        self.list_fullimgpath = []
         for y in range(4):
-            self.list_img.append((k.split('/')[-1].split('.')[0] for k in glob.glob(os.path.join(path_to_labels, patch_lab[y], '*.tif'))))
+            self.list_fullimgpath.append(glob.glob(os.path.join(path_to_labels, patch_lab[y], '*.tif')))
         # store the batch size
         self.batch_size = batch_size
         # store the total number of images
-        self.size = len(self.list_img)
+        self.size = len(self.list_fullimgpath)
         # initialize a cursor to keep track of the current image index 
         self.cursor = 0
         # store the number of batches
@@ -71,7 +71,7 @@ class DataLoader(object):
         # once we reach the end of the dataset, shuffle it again and reset cursor
         if self.cursor + self.batch_size > self.size:
             self.cursor = 0
-            np.random.shuffle(self.list_img)
+            np.random.shuffle(self.list_fullimgpath)
         # initialize the image tensor with arrays full of zeros
         imgs = torch.zeros(self.batch_size, 1, HEIGHT, WIDTH)
         # initialize the label tensor with zeros, 3 here is the size of one-hot encoded label for a 3-class classification problem
@@ -80,15 +80,13 @@ class DataLoader(object):
         # get_batch() still not random. Takes one from each label per batch
         for idx in range(self.batch_size):
             # get the current file name pointed by the cursor
-            curr_file = self.list_img[self.cursor]
+            curr_path = self.list_fullimgpath[self.cursor]
             print('cursor' + str(self.cursor))
-            # get the full path to that image?????????????
-            full_img_path = os.path.join(patch_dir, state, patch_lab[idx], curr_file+'.tif')
             # update cursor
             self.cursor += 1
 
             # read image in grayscale
-            image = cv2.imread(full_img_path, 0)
+            image = cv2.imread(curr_path, 0)
             imgs = image.data_transforms[state]
 
             # label index
