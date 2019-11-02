@@ -11,14 +11,14 @@ import time
 import os
 import copy
 from torchvision import datasets, models, transforms
-from .LeNet import LeNet5
-from sklearn.externals import joblib
+from Dataloader_ImageProcess.LeNet import LeNet5
+import joblib
 from PIL import Image
 from pathlib import Path
 
 # Image size required by your neural network
-HEIGHT = 256
-WIDTH = 256
+HEIGHT = 128
+WIDTH = 128
 patch_dir = '/home/zi29/Desktop/IMP/wk4/dataset/raw/patches'
 patch_set = ['train', 'test', 'val']
 patch_lab = ['dpi75', 'dpi150', 'dpi300', 'dpi600']
@@ -54,8 +54,11 @@ class DataLoader(object):
         # reading data list
         # now it's a list of all images in that dataset(train or val)
         self.list_fullimgpath = []
-        for y in range(4):
-            self.list_fullimgpath.append(glob.glob(os.path.join(path_to_labels, patch_lab[y], '*.tif')))
+        for y in patch_lab:
+            temp_list = glob.glob(os.path.join(path_to_labels, y, '*.tif'))
+            for item in temp_list:
+                self.list_fullimgpath.append(item)
+        print(self.list_fullimgpath)
         # store the batch size
         self.batch_size = batch_size
         # store the total number of images
@@ -66,6 +69,8 @@ class DataLoader(object):
         self.num_batches = self.size // batch_size
         # store image path
         self.path = path_to_labels
+        # get length
+        self.len = len(self.list_fullimgpath)
 
     def get_batch(self, state):
         # once we reach the end of the dataset, shuffle it again and reset cursor
@@ -77,21 +82,20 @@ class DataLoader(object):
         # initialize the label tensor with zeros, 3 here is the size of one-hot encoded label for a 3-class classification problem
         labels = torch.zeros(self.batch_size, 4)
 
-        # get_batch() still not random. Takes one from each label per batch
         for idx in range(self.batch_size):
-            # get the current file name pointed by the cursor
+            # get the current file path pointed by the cursor
             curr_path = self.list_fullimgpath[self.cursor]
             print('cursor' + str(self.cursor))
             # update cursor
             self.cursor += 1
 
-            # read image in grayscale
-            image = cv2.imread(curr_path, 0)
-            imgs = image.data_transforms[state]
+            # read image in grayscale and transform
+            image = Image.open(curr_path).convert('L')
+            imgs = data_transforms[state](image)
 
             # label index
             # Here is where we use split to find out what label it belongs to
-            lab_ind = # How to get the labeling information???
+            lab_ind = patch_lab.index(curr_path.split('/')[-2])
             labels[idx][lab_ind] = 1
 
         return imgs, labels
@@ -119,5 +123,3 @@ def showABatch(batch, title=None):
         plt.figure()
         imshow(imgs[i].squeeze(), 'label: '+label_dict[torch.max(labels[i]).item()])
     plt.show()
-
-

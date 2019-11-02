@@ -12,8 +12,8 @@ import os
 import copy
 import torchvision
 from torchvision import datasets, models, transforms
-from .LeNet import LeNet5
-from .dataloader import DataLoader
+from Dataloader_ImageProcess.dataloader import DataLoader
+from Dataloader_ImageProcess.LeNet import LeNet5
 
 data_transforms = {
         'train': transforms.Compose([
@@ -52,8 +52,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             running_loss = 0.0
             running_corrects = 0
 
+            data_loader = dataloaders[phase]
+
             # Iterate over data.
-            for inputs, labels in DataLoader.get_batch(model, phase):
+            for inputs, labels in data_loader.get_batch(phase):
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
@@ -105,14 +107,13 @@ patch_dir = '/home/zi29/Desktop/IMP/wk4/dataset/raw/patches'
 patch_set = ['train', 'test', 'val']
 patch_lab = ['dpi75', 'dpi150', 'dpi300', 'dpi600']
 
-# trying to get train: all train images and val: all val images
 dataloaders = {x: DataLoader(os.path.join(patch_dir, x), batch_size=4)
                for x in ['train', 'val']}
 
-dataset_sizes = {x: len(dataloaders[x]) for x in ['train', 'val']}
+dataset_sizes = {x: dataloaders[x].len for x in ['train', 'val']}
 print(str(torch.cuda.is_available()))
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0")  # if torch.cuda.is_available() else "cpu")
 
 # LeNet take input 128x128
 model_or = LeNet5()
