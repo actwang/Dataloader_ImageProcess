@@ -52,10 +52,13 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
             running_loss = 0.0
             running_corrects = 0
 
-            data_loader = dataloaders[phase]
-
+            # print(dataloaders[phase].get_batch(phase))
             # Iterate over data.
-            for inputs, labels in data_loader.get_batch(phase):
+            # When using for loop, inputs and labels doesn't take two tensors correctly
+            # but for loop ensures it iterates through entire training set
+            # for inputs, labels in dataloaders[phase].get_batch(phase):
+            for ind in range(dataloaders[phase].num_batches):
+                inputs, labels = dataloaders[phase].get_batch(phase)
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
@@ -107,10 +110,18 @@ patch_dir = '/home/zi29/Desktop/IMP/wk4/dataset/raw/patches'
 patch_set = ['train', 'test', 'val']
 patch_lab = ['dpi75', 'dpi150', 'dpi300', 'dpi600']
 
-dataloaders = {x: DataLoader(os.path.join(patch_dir, x), batch_size=4)
+dataloaders = {x: DataLoader(os.path.join(patch_dir, x), batch_size=16)
                for x in ['train', 'val']}
 
-dataset_sizes = {x: dataloaders[x].len for x in ['train', 'val']}
+# try built-in dataloader
+# image_datasets = {x: datasets.ImageFolder(os.path.join(patch_dir, x),
+#                                           data_transforms[x])
+#                   for x in ['train', 'val']}
+# dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4,
+#                                              shuffle=True, num_workers=4)
+#               for x in ['train', 'val']}
+
+dataset_sizes = {x: dataloaders[x].size for x in ['train', 'val']}
 print(str(torch.cuda.is_available()))
 
 device = torch.device("cuda:0")  # if torch.cuda.is_available() else "cpu")

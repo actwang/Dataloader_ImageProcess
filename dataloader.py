@@ -69,8 +69,6 @@ class DataLoader(object):
         self.num_batches = self.size // batch_size
         # store image path
         self.path = path_to_labels
-        # get length
-        self.len = len(self.list_fullimgpath)
 
     def get_batch(self, state):
         # once we reach the end of the dataset, shuffle it again and reset cursor
@@ -80,7 +78,7 @@ class DataLoader(object):
         # initialize the image tensor with arrays full of zeros
         imgs = torch.zeros(self.batch_size, 1, HEIGHT, WIDTH)
         # initialize the label tensor with zeros, 3 here is the size of one-hot encoded label for a 3-class classification problem
-        labels = torch.zeros(self.batch_size, 4)
+        labels = torch.LongTensor(self.batch_size)
 
         for idx in range(self.batch_size):
             # get the current file path pointed by the cursor
@@ -90,14 +88,16 @@ class DataLoader(object):
             self.cursor += 1
 
             # read image in grayscale and transform
-            image = Image.open(curr_path).convert('L')
-            imgs = data_transforms[state](image)
+            image = cv2.imread(curr_path, 0)
+            imgs[idx, 0, :, :] = data_transforms[state](Image.fromarray(image))
 
             # label index
             # Here is where we use split to find out what label it belongs to
             lab_ind = patch_lab.index(curr_path.split('/')[-2])
-            labels[idx][lab_ind] = 1
+            labels[idx] = lab_ind
 
+        # print((imgs, labels)[0])
+        # print((imgs, labels)[-1])
         return imgs, labels
 
 

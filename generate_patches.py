@@ -90,11 +90,7 @@ def isblank(img):
     # 0 -> black 1 -> white
     # but thresholding value retval still range from 0 to 255, if it falls below 220,
     # most likely it contains some type of text
-    if retval < 220.0:
-        blank = False
-    else:
-        blank = True
-    return blank
+    return retval < 220.0
 
 
 # MAIN

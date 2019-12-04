@@ -23,19 +23,19 @@ class LeNet5(nn.Module):
             ('c1', nn.Conv2d(1, 6, kernel_size=(5, 5))),
             ('relu1', nn.ReLU()),
             ('s2', nn.MaxPool2d(kernel_size=(2, 2), stride=2)),
-            ('c3', nn.Conv2d(6, 16, kernel_size=(5, 5))),
+            ('c3', nn.Conv2d(6, 16, kernel_size=(3, 3))),
             ('relu3', nn.ReLU()),
             ('s4', nn.MaxPool2d(kernel_size=(2, 2), stride=2)),
-            # flatten() here from 16@5x5 to 400x1 to (in linear) 120 to 4
-            ('c5', nn.Conv2d(16, 120, kernel_size=(5, 5))),
-            ('relu5', nn.ReLU())
+            ('c5', nn.Conv2d(16, 120, kernel_size=(3, 3))),
+            ('relu5', nn.ReLU()),
+            ('s5', nn.MaxPool2d(kernel_size=(2, 2), stride=2))
         ]))
 
         self.fc = nn.Sequential(OrderedDict([
-            ('f6', nn.Linear(120, 84)),
-            ('relu6', nn.ReLU()),
-            ('f7', nn.Linear(84, 4)),
-            ('sig7', nn.LogSoftmax(dim=-1))
+            ('f6', nn.Linear(120*14*14, 1500)),
+            ('relu9', nn.ReLU()),
+            ('f10', nn.Linear(1500, 4)),
+            ('sig10', nn.Softmax(dim=1))
         ]))
 
     def forward(self, img):
